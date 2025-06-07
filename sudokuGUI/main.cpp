@@ -17,8 +17,8 @@ int SCREENW = 800;
 int SCREENH = 750;
 
 bool PlayScreen = true;
-bool GameScreen = false;
 bool LevelScreen = false;
+bool GameScreen = false;
 
 int level = 0;
 
@@ -49,8 +49,100 @@ void drawLevelScreen(sf::RenderWindow& window, sf::Font font) {
     window.draw(text);
 }
 
+void drawNumbers(std::vector<std::vector<int>> puzzle, sf::Font font, sf::RenderWindow& window) {
+    // Lets make the grid now
+    int offset = 3;
+
+
+    sf::Text text;
+    text.setFont(font);
+    text.setFillColor(sf::Color::White);
+    text.setCharacterSize(35);
+
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
+            int num = puzzle[i][j];
+            if (j % 3 == 0 || i % 3 == 0) {
+                offset += 3;
+            }
+
+            // if (num) {
+            //     text.setString(std::to_string(num));
+            //     text.setPosition(76 + offset + i * 74, 25 + offset + j * 74);
+
+            //     window.draw(text);
+            // }
+            text.setString(std::to_string(num));
+            text.setPosition(76 + offset + i * 74, 25 + offset + j * 74);
+
+            window.draw(text);
+
+        }
+    }
+}
+
+void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::vector<int>> puzzle) {
+    window.clear(sf::Color(33, 52, 72));
+
+    // Lets make the grid now
+    int heightOffset = 8;
+    int widthOffset = 58;
+
+    // verticle lines 
+    for (int i = 0; i < 10; ++i) {
+        if (i % 3 != 0) {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(widthOffset + 76 * i, heightOffset)),
+                sf::Vertex(sf::Vector2f(widthOffset + 76 * i, 700 - heightOffset))
+            };
+            line[0].color = sf::Color(0, 0, 0);
+            line[1].color = sf::Color(0, 0, 0);
+            window.draw(line, 2, sf::Lines);
+        }
+        else {
+            sf::RectangleShape line(sf::Vector2f(3, 684));
+            line.setPosition(widthOffset - 3 + i * 76, heightOffset);
+            line.setFillColor(sf::Color(0, 0, 0));
+
+            window.draw(line);
+        }
+    }
+
+    // Horozontal lines 
+    for (int i = 0; i < 10; ++i) {
+        if (i % 3 != 0) {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(widthOffset, heightOffset + 76 * i)),
+                sf::Vertex(sf::Vector2f(800 - widthOffset , heightOffset + 76 * i))
+            };
+            line[0].color = sf::Color(0, 0, 0);
+            line[1].color = sf::Color(0, 0, 0);
+            window.draw(line, 2, sf::Lines);
+        }
+        else {
+            sf::RectangleShape line(sf::Vector2f(684 + 3, 3));
+            line.setPosition(widthOffset - 3, heightOffset - 3 + i * 76);
+            line.setFillColor(sf::Color(0, 0, 0));
+
+            window.draw(line);
+        }
+    }
+
+    drawNumbers(puzzle, font, window);
+}
+
 int main() {
 
+    std::vector<std::vector<int>> puzzle = {
+        {0, 0, 0, 4, 0, 0, 0, 9, 2},
+        {0, 0, 9, 7, 0, 3, 0, 0, 0},
+        {0, 6, 0, 0, 0, 0, 0, 0, 4},
+        {0, 1, 3, 0, 0, 0, 0, 0, 0},
+        {2, 0, 7, 8, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 2, 0, 5, 0},
+        {8, 0, 0, 0, 5, 0, 0, 4, 0},
+        {7, 0, 0, 0, 9, 0, 1, 0, 8},
+        {0, 0, 0, 0, 0, 4, 0, 0, 0} };
 
     sf::RenderWindow window(sf::VideoMode(SCREENW, SCREENH), "Sudoku", sf::Style::Close);
 
@@ -77,6 +169,8 @@ int main() {
     Button EXPERT({ 300, 50 }, { 250 , 480 }, "EXPERT", font);
     EXPERT.setColors(sf::Color(214, 20, 20), sf::Color(230, 0, 0), sf::Color(150, 0, 0));
 
+    Button SOLVE({ 150, 30 }, { 600 , 715 }, "SOLVE", font);
+    SOLVE.setColors(sf::Color(214, 20, 20), sf::Color(230, 0, 0), sf::Color(150, 0, 0));
 
 
     while (window.isOpen()) {
@@ -87,41 +181,43 @@ int main() {
                 window.close();
             }
 
-            if (PLAY.isClicked(event, window)) {
+            if (PlayScreen && PLAY.isClicked(event, window)) {
                 PlayScreen = false;
                 LevelScreen = true;
+                continue;
             }
 
-            if (EASY.isClicked(event, window)) {
+            if (LevelScreen && EASY.isClicked(event, window)) {
                 level = 0;
 
                 LevelScreen = false;
                 GameScreen = true;
-
+                continue;
             }
 
-            if (MEDIUM.isClicked(event, window)) {
+            if (LevelScreen && MEDIUM.isClicked(event, window)) {
 
                 level = 1;
                 LevelScreen = false;
                 GameScreen = true;
-
-
+                continue;
             }
-            if (HARD.isClicked(event, window)) {
+            if (LevelScreen && HARD.isClicked(event, window)) {
                 level = 2;
                 LevelScreen = false;
                 GameScreen = true;
-
-
+                continue;
             }
 
-            if (EXPERT.isClicked(event, window)) {
+            if (LevelScreen && EXPERT.isClicked(event, window)) {
                 level = 3;
                 LevelScreen = false;
                 GameScreen = true;
+                continue;
+            }
 
-
+            if (GameScreen && SOLVE.isClicked(event, window)) {
+                std::cout << "Solve Clicked";
             }
         }
 
@@ -134,8 +230,7 @@ int main() {
             // window.update();
 
         }
-
-        if (LevelScreen) {
+        else if (LevelScreen) {
             drawLevelScreen(window, font);
 
             EASY.render(window);
@@ -147,6 +242,14 @@ int main() {
             MEDIUM.update(window);
             HARD.update(window);
             EXPERT.update(window);
+
+        }
+        else if (GameScreen) {
+            drawGameScreen(window, font, puzzle);
+
+            SOLVE.render(window);
+            SOLVE.update(window);
+
         }
 
 
