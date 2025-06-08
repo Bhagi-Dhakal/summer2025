@@ -21,6 +21,8 @@ bool LevelScreen = false;
 bool GameScreen = false;
 
 int level = 0;
+std::vector<int> selectedCell{ -1,-1 };
+int cellSize = 76;
 
 /* Screens */
 void drawPlayScreen(sf::RenderWindow& window, sf::Font font) {
@@ -49,10 +51,81 @@ void drawLevelScreen(sf::RenderWindow& window, sf::Font font) {
     window.draw(text);
 }
 
+std::vector<int> getRowCol(int x, int y) {
+    const int cellSize = 76;
+    const int widthOffset = 58;
+    const int heightOffset = 8;
+
+    int row = (y - heightOffset) / cellSize;
+    int col = (x - widthOffset) / cellSize;
+
+    return std::vector<int> {row, col};
+}
+
+
+// Lots of over lap here for this function... I can improve this but later! 
+void highlightSingle(sf::RenderWindow& window, sf::Color color) {
+
+    sf::RectangleShape highlight(sf::Vector2f(cellSize - 10, cellSize - 10));
+    highlight.setFillColor(sf::Color::Transparent);
+    highlight.setOutlineColor(color);
+    highlight.setOutlineThickness(3);
+    highlight.setPosition(58 + 5 + selectedCell[1] * cellSize, 8 + 5 + selectedCell[0] * cellSize);
+
+    window.draw(highlight);
+
+}
+
+void highlightSingleRC(sf::RenderWindow& window, sf::Color color, int row, int col) {
+
+    sf::RectangleShape highlight(sf::Vector2f(cellSize - 10, cellSize - 10));
+    highlight.setFillColor(sf::Color::Transparent);
+    highlight.setOutlineColor(color);
+    highlight.setOutlineThickness(3);
+    highlight.setPosition(58 + 5 + col * cellSize, 8 + 5 + row * cellSize);
+
+    window.draw(highlight);
+
+}
+
+void highlightRow(sf::RenderWindow& window, sf::Color color, std::vector<std::vector<int>> puzzle) {
+
+    for (int i = 0; i < 9; ++i) {
+        if (i == selectedCell[1]) continue;// skip the selected(for dif color)
+        if (puzzle[selectedCell[0]][i]) {
+            sf::RectangleShape highlight(sf::Vector2f(cellSize - 10, cellSize - 10));
+            highlight.setFillColor(sf::Color::Transparent);
+            highlight.setOutlineColor(color);
+            highlight.setOutlineThickness(3);
+            highlight.setPosition(58 + 5 + i * cellSize, 8 + 5 + selectedCell[0] * cellSize);
+
+            window.draw(highlight);
+        }
+    }
+}
+
+void highlightCol(sf::RenderWindow& window, sf::Color color, std::vector<std::vector<int>> puzzle) {
+
+    for (int i = 0; i < 9; ++i) {
+        if (i == selectedCell[0]) continue;// skip the selected(for dif color)
+        if (puzzle[i][selectedCell[1]]) {
+            sf::RectangleShape highlight(sf::Vector2f(cellSize - 10, cellSize - 10));
+            highlight.setFillColor(sf::Color::Transparent);
+            highlight.setOutlineColor(color);
+            highlight.setOutlineThickness(3);
+            highlight.setPosition(58 + 5 + selectedCell[1] * cellSize, 8 + 5 + i * cellSize);
+
+            window.draw(highlight);
+        }
+    }
+}
+
+
 void drawNumbers(std::vector<std::vector<int>> puzzle, sf::Font font, sf::RenderWindow& window) {
     // Lets make the grid now
-    int offset = 3;
-
+    const int cellSize = 76;
+    const int widthOffset = 58;
+    const int heightOffset = 8;
 
     sf::Text text;
     text.setFont(font);
@@ -62,21 +135,20 @@ void drawNumbers(std::vector<std::vector<int>> puzzle, sf::Font font, sf::Render
     for (int i = 0; i < 9; ++i) {
         for (int j = 0; j < 9; ++j) {
             int num = puzzle[i][j];
-            if (j % 3 == 0 || i % 3 == 0) {
-                offset += 3;
-            }
 
-            // if (num) {
-            //     text.setString(std::to_string(num));
-            //     text.setPosition(76 + offset + i * 74, 25 + offset + j * 74);
+            if (num == 0) continue;
 
-            //     window.draw(text);
-            // }
             text.setString(std::to_string(num));
-            text.setPosition(76 + offset + i * 74, 25 + offset + j * 74);
+            // sets the test origin to center.
+            sf::FloatRect bounds = text.getLocalBounds();
+            text.setOrigin(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
 
+            // Compute cell center 
+            float x = widthOffset + cellSize * j + cellSize / 2.0f;
+            float y = heightOffset + cellSize * i + cellSize / 2.0f;
+
+            text.setPosition(x, y);
             window.draw(text);
-
         }
     }
 }
@@ -108,7 +180,7 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
         }
     }
 
-    // Horozontal lines 
+    // Horizontal lines 
     for (int i = 0; i < 10; ++i) {
         if (i % 3 != 0) {
             sf::Vertex line[] = {
@@ -128,8 +200,30 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
         }
     }
 
+    if (selectedCell[0] != -1 && selectedCell[1] != -1) {
+        if (!puzzle[selectedCell[0]][selectedCell[1]]) {
+            // selecting empty space
+            highlightSingle(window, sf::Color(255, 50, 50));
+            highlightRow(window, sf::Color(100, 30, 30), puzzle);
+            highlightCol(window, sf::Color(100, 30, 30), puzzle);
+        }
+        else {
+            // selecting non empty space! 
+            int num = puzzle[selectedCell[0]][selectedCell[1]];
+            for (int i = 0; i < 9; ++i) {
+                for (int j = 0; j < 9; ++j) {
+                    if (puzzle[i][j] == num) {
+                        highlightSingleRC(window, sf::Color(0, 255, 0), i, j);
+                    }
+                }
+            }
+
+        }
+    }
+
     drawNumbers(puzzle, font, window);
 }
+
 
 int main() {
 
@@ -219,6 +313,31 @@ int main() {
             if (GameScreen && SOLVE.isClicked(event, window)) {
                 std::cout << "Solve Clicked";
             }
+
+
+            sf::Vector2i mousePosWindow = sf::Mouse::getPosition(window);
+            if (GameScreen &&
+                (mousePosWindow.x > 58 && mousePosWindow.x < 742) &&
+                (mousePosWindow.y > 8 && mousePosWindow.y < 692)) {
+
+                if (event.type == sf::Event::MouseButtonPressed) {
+                    selectedCell = getRowCol(mousePosWindow.x, mousePosWindow.y);
+                }
+            }
+
+            // Not a fan of all this nesting... 
+            if (selectedCell[0] != -1 && selectedCell[1] != -1) {
+                if (GameScreen && event.type == sf::Event::KeyPressed) {
+                    if (event.key.code >= sf::Keyboard::Num1 && event.key.code <= sf::Keyboard::Num9) {
+                        int value = event.key.code - sf::Keyboard::Num0;
+                        //std::cout << "You pressed: " << value << std::endl;
+                        if (puzzle[selectedCell[0]][selectedCell[1]] == 0) {
+                            puzzle[selectedCell[0]][selectedCell[1]] = value;
+                        }
+                    }
+                }
+            }
+
         }
 
         if (PlayScreen) {
