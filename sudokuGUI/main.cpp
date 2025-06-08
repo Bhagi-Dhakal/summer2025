@@ -200,6 +200,7 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
         }
     }
 
+    // for highlighing 
     if (selectedCell[0] != -1 && selectedCell[1] != -1) {
         if (!puzzle[selectedCell[0]][selectedCell[1]]) {
             // selecting empty space

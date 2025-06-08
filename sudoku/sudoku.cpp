@@ -19,7 +19,7 @@ std::vector<std::vector<int>> allocate_2d_array(int rows, int cols)
 	return std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0));
 }
 
-void print_2d_array(const std::vector<std::vector<int>> &array)
+void print_2d_array(const std::vector<std::vector<int>>& array)
 {
 	for (int i = 0; i < 9; i++)
 	{
@@ -58,7 +58,7 @@ void printValidNumbers(std::vector<int> validList)
 		std::cout << valid << " ";
 	}
 	std::cout << "\n"
-			  << std::endl;
+		<< std::endl;
 }
 
 std::vector<int> getCommandInput()
@@ -118,7 +118,7 @@ void checkAnswer(std::vector<int> command, std::vector<std::vector<int>> puzzle)
 
 std::vector<int> validNumberList(std::vector<std::vector<int>> puzzle, int row, int col)
 {
-	std::vector<int> validList{1, 2, 3, 4, 5, 6, 7, 8, 9};
+	std::vector<int> validList{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
 	// check row
 	for (int i = 0; i < 9; i++)
@@ -253,7 +253,7 @@ int main()
 		{0, 0, 0, 0, 0, 2, 0, 5, 0},
 		{8, 0, 0, 0, 5, 0, 0, 4, 0},
 		{7, 0, 0, 0, 9, 0, 1, 0, 8},
-		{0, 0, 0, 0, 0, 4, 0, 0, 0}};
+		{0, 0, 0, 0, 0, 4, 0, 0, 0} };
 
 	print_2d_array(puzzle);
 
