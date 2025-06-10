@@ -297,17 +297,17 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
 
 
 
-    if (incorrect) {
-        sf::Text text;
-        text.setFont(font);
-        text.setFillColor(sf::Color::Red);
-        text.setCharacterSize(30);
+    // if (incorrect) {
+    //     sf::Text text;
+    //     text.setFont(font);
+    //     text.setFillColor(sf::Color::Red);
+    //     text.setCharacterSize(30);
 
-        std::string num = std::to_string(incorrect);
-        text.setString("Incorrect: " + num);
-        text.setPosition(50, 705);
-        window.draw(text);
-    }
+    //     std::string num = std::to_string(incorrect);
+    //     text.setString("Incorrect: " + num);
+    //     text.setPosition(50, 705);
+    //     window.draw(text);
+    // }
 
     // Timer 
     int seconds = static_cast<int>(elapsed.asSeconds());
