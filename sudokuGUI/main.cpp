@@ -295,6 +295,8 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
         }
     }
 
+
+
     if (incorrect) {
         sf::Text text;
         text.setFont(font);
