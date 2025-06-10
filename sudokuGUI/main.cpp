@@ -23,6 +23,79 @@ bool GameScreen = false;
 int level = 0;
 std::vector<int> selectedCell{ -1,-1 };
 int cellSize = 76;
+int incorrect = 0;
+bool timerStarted = false;
+
+
+/* Functions that help to  Solve Puzzle */
+
+std::vector<int> validNumberList(std::vector<std::vector<int>> puzzle, int row, int col) {
+    std::vector<bool> validList(9, false);
+
+    // check row
+    for (int i = 0; i < 9; i++) {
+        int val = puzzle[row][i];
+        if (val != 0) {
+            validList[val] = true;
+        }
+    }
+
+    // check col
+    for (int i = 0; i < 9; i++) {
+        int val = puzzle[i][col];
+        if (val != 0) {
+            validList[val] = true;
+        }
+    }
+
+    // check box
+    // this will return the box of the index blongs to, clever way
+    int boxIndexRow = (row / 3) * 3;
+    int boxIndexCol = (col / 3) * 3;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            int val = puzzle[boxIndexRow + i][boxIndexCol + j];
+            if (val != 0) {
+                validList[val] = true;
+            }
+        }
+    }
+
+    std::vector<int> actualvalidList;
+    for (int i = 1; i <= 9; ++i) {
+        if (!validList[i]) {
+            actualvalidList.push_back(i);
+        }
+    }
+
+    return actualvalidList;
+}
+
+
+bool solvePuzzle(std::vector<std::vector<int>>& puzzle) {
+
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (puzzle[i][j] == 0) {
+                //  get list of valid numbers
+                std::vector<int> validNumbers = validNumberList(puzzle, i, j);
+                if (validNumbers.empty()) return false;
+                //print_2d_array(puzzle);
+                for (int num : validNumbers) {
+                    puzzle[i][j] = num;
+                    if (solvePuzzle(puzzle)) {
+                        return true;
+                    }
+                    puzzle[i][j] = 0;
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 /* Screens */
 void drawPlayScreen(sf::RenderWindow& window, sf::Font font) {
@@ -153,7 +226,7 @@ void drawNumbers(std::vector<std::vector<int>> puzzle, sf::Font font, sf::Render
     }
 }
 
-void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::vector<int>> puzzle) {
+void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::vector<int>> puzzle, sf::Time elapsed) {
     window.clear(sf::Color(33, 52, 72));
 
     // Lets make the grid now
@@ -222,8 +295,37 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
         }
     }
 
+    if (incorrect) {
+        sf::Text text;
+        text.setFont(font);
+        text.setFillColor(sf::Color::Red);
+        text.setCharacterSize(30);
+
+        std::string num = std::to_string(incorrect);
+        text.setString("Incorrect: " + num);
+        text.setPosition(50, 705);
+        window.draw(text);
+    }
+
+    // Timer 
+    int seconds = static_cast<int>(elapsed.asSeconds());
+    int minutes = seconds / 60;
+    seconds = seconds % 60;
+
+    std::string timeStr = "Time: " + std::to_string(minutes) + ":" + (seconds < 10 ? "0" : "") + std::to_string(seconds);
+
+    sf::Text timerText;
+    timerText.setFont(font);
+    timerText.setCharacterSize(30);
+    timerText.setFillColor(sf::Color::White);
+    timerText.setString(timeStr);
+    timerText.setPosition(300, 705);
+
+    window.draw(timerText);
+
     drawNumbers(puzzle, font, window);
 }
+
 
 
 int main() {
@@ -238,6 +340,9 @@ int main() {
         {8, 0, 0, 0, 5, 0, 0, 4, 0},
         {7, 0, 0, 0, 9, 0, 1, 0, 8},
         {0, 0, 0, 0, 0, 4, 0, 0, 0} };
+
+    std::vector<std::vector<int>> copyPuzzleSolved = puzzle;
+    solvePuzzle(copyPuzzleSolved);
 
     sf::RenderWindow window(sf::VideoMode(SCREENW, SCREENH), "Sudoku", sf::Style::Close);
 
@@ -267,8 +372,12 @@ int main() {
     Button SOLVE({ 150, 30 }, { 600 , 715 }, "SOLVE", font);
     SOLVE.setColors(sf::Color(214, 20, 20), sf::Color(230, 0, 0), sf::Color(150, 0, 0));
 
+    sf::Clock gameClock;
+
 
     while (window.isOpen()) {
+
+
 
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -312,7 +421,7 @@ int main() {
             }
 
             if (GameScreen && SOLVE.isClicked(event, window)) {
-                std::cout << "Solve Clicked";
+                puzzle = copyPuzzleSolved;
             }
 
 
@@ -333,7 +442,12 @@ int main() {
                         int value = event.key.code - sf::Keyboard::Num0;
                         //std::cout << "You pressed: " << value << std::endl;
                         if (puzzle[selectedCell[0]][selectedCell[1]] == 0) {
-                            puzzle[selectedCell[0]][selectedCell[1]] = value;
+                            if (copyPuzzleSolved[selectedCell[0]][selectedCell[1]] == value) {
+                                puzzle[selectedCell[0]][selectedCell[1]] = value;
+                            }
+                            else {
+                                incorrect++;
+                            }
                         }
                     }
                 }
@@ -365,7 +479,14 @@ int main() {
 
         }
         else if (GameScreen) {
-            drawGameScreen(window, font, puzzle);
+
+            if (!timerStarted) {
+                gameClock.restart();
+                timerStarted = true;
+            }
+
+            sf::Time elapsed = gameClock.getElapsedTime();
+            drawGameScreen(window, font, puzzle, elapsed);
 
             SOLVE.render(window);
             SOLVE.update(window);

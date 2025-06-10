@@ -116,27 +116,23 @@ void checkAnswer(std::vector<int> command, std::vector<std::vector<int>> puzzle)
 	return;
 }
 
-std::vector<int> validNumberList(std::vector<std::vector<int>> puzzle, int row, int col)
-{
-	std::vector<int> validList{ 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+std::vector<int> validNumberList(std::vector<std::vector<int>> puzzle, int row, int col) {
+	std::vector<bool> validList(9, false);
 
 	// check row
-	for (int i = 0; i < 9; i++)
-	{
-		if (puzzle[row][i] != 0)
-		{
-			// remove that number from our list.
-			validList.erase(std::remove(validList.begin(), validList.end(), puzzle[row][i]), validList.end());
+	for (int i = 0; i < 9; i++) {
+		int val = puzzle[row][i];
+		if (val != 0) {
+			validList[val] = true;
 		}
 	}
 
 	// check col
-	for (int i = 0; i < 9; i++)
-	{
-		if (puzzle[i][col] != 0)
-		{
+	for (int i = 0; i < 9; i++) {
+		int val = puzzle[i][col];
+		if (val != 0) {
 			// remove the number we find from our list.
-			validList.erase(std::remove(validList.begin(), validList.end(), puzzle[i][col]), validList.end());
+			validList[val] = true;
 		}
 	}
 
@@ -146,55 +142,49 @@ std::vector<int> validNumberList(std::vector<std::vector<int>> puzzle, int row, 
 	int boxIndexRow = (row / 3) * 3;
 	int boxIndexCol = (col / 3) * 3;
 
-	std::cout << boxIndexRow << " c" << boxIndexCol << "\n";
-
-	for (int i = 0; i < 3; ++i)
-	{
-		for (int j = 0; j < 3; ++j)
-		{
-			if (puzzle[boxIndexRow + i][boxIndexCol + j] != 0)
-			{
-				validList.erase(std::remove(validList.begin(), validList.end(), puzzle[boxIndexRow + i][boxIndexCol + j]), validList.end());
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			int val = puzzle[boxIndexRow + i][boxIndexCol + j];
+			if (val != 0) {
+				validList[val] = true;
 			}
 		}
 	}
 
-	return validList;
+	std::vector<int> actualvalidList;
+	for (int i = 1; i <= 9; ++i) {
+		if (!validList[i]) {
+			actualvalidList.push_back(i);
+		}
+	}
+
+
+	return actualvalidList;
 }
 
-void solvePuzzle(std::vector<std::vector<int>> puzzle)
-{
 
-	for (int i = 0; i < 9; i++)
-	{
-		for (int j = 0; j < 9; j++)
-		{
-			// std::cout << "Inside the solve puzzle \n";
-			if (puzzle[i][j] == 0)
-			{
-				// std::cout << "Inside the IF  \n";
+bool solvePuzzle(std::vector<std::vector<int>>& puzzle) {
+
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			if (puzzle[i][j] == 0) {
 				//  get list of valid numbers
 				std::vector<int> validNumbers = validNumberList(puzzle, i, j);
+				if (validNumbers.empty()) return false;
 				print_2d_array(puzzle);
-				// try out all the valid numbres.
-				if (validNumbers.empty())
-				{
-					return;
-				}
-				else
-				{
-					printValidNumbers(validNumbers);
-					for (int num : validNumbers)
-					{
-						puzzle[i][j] = num;
-						solvePuzzle(puzzle);
+				for (int num : validNumbers) {
+					puzzle[i][j] = num;
+					if (solvePuzzle(puzzle)) {
+						return true;
 					}
+					puzzle[i][j] = 0;
 				}
+				return false;
 			}
 		}
 	}
+	return true;
 }
-
 void get_command(std::vector<std::vector<int>> puzzle)
 {
 	char choice;
