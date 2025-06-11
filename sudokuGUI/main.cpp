@@ -25,6 +25,8 @@ std::vector<int> selectedCell{ -1,-1 };
 int cellSize = 76;
 int incorrect = 0;
 bool timerStarted = false;
+sf::Time finalElapsed;
+bool isPuzzleSolved = false;
 
 
 /* Functions that help to  Solve Puzzle */
@@ -295,19 +297,17 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
         }
     }
 
+    if (incorrect) {
+        sf::Text text;
+        text.setFont(font);
+        text.setFillColor(sf::Color::Red);
+        text.setCharacterSize(30);
 
-
-    // if (incorrect) {
-    //     sf::Text text;
-    //     text.setFont(font);
-    //     text.setFillColor(sf::Color::Red);
-    //     text.setCharacterSize(30);
-
-    //     std::string num = std::to_string(incorrect);
-    //     text.setString("Incorrect: " + num);
-    //     text.setPosition(50, 705);
-    //     window.draw(text);
-    // }
+        std::string num = std::to_string(incorrect);
+        text.setString("Incorrect: " + num);
+        text.setPosition(50, 705);
+        window.draw(text);
+    }
 
     // Timer 
     int seconds = static_cast<int>(elapsed.asSeconds());
@@ -321,7 +321,7 @@ void drawGameScreen(sf::RenderWindow& window, sf::Font font, std::vector<std::ve
     timerText.setCharacterSize(30);
     timerText.setFillColor(sf::Color::White);
     timerText.setString(timeStr);
-    timerText.setPosition(300, 705);
+    timerText.setPosition(250, 705);
 
     window.draw(timerText);
 
@@ -371,16 +371,16 @@ int main() {
     Button EXPERT({ 300, 50 }, { 250 , 480 }, "EXPERT", font);
     EXPERT.setColors(sf::Color(214, 20, 20), sf::Color(230, 0, 0), sf::Color(150, 0, 0));
 
-    Button SOLVE({ 150, 30 }, { 600 , 715 }, "SOLVE", font);
+    Button SOLVE({ 150, 30 }, { 600 , 705 }, "SOLVE", font);
     SOLVE.setColors(sf::Color(214, 20, 20), sf::Color(230, 0, 0), sf::Color(150, 0, 0));
+
+    Button BACK({ 150, 30 }, { 440 , 705 }, "Back", font);
+    BACK.setColors(sf::Color(122, 245, 122), sf::Color(120, 255, 120), sf::Color(70, 210, 70));
 
     sf::Clock gameClock;
 
 
     while (window.isOpen()) {
-
-
-
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
@@ -424,6 +424,17 @@ int main() {
 
             if (GameScreen && SOLVE.isClicked(event, window)) {
                 puzzle = copyPuzzleSolved;
+                isPuzzleSolved = true;
+                continue;
+            }
+
+            if (GameScreen && BACK.isClicked(event, window)) {
+                PlayScreen = true;
+                LevelScreen = false;
+                GameScreen = false;
+                isPuzzleSolved = false;
+                timerStarted = false;
+                continue;
             }
 
 
@@ -482,24 +493,25 @@ int main() {
         }
         else if (GameScreen) {
 
+            if (!isPuzzleSolved) {
+                finalElapsed = gameClock.getElapsedTime();
+            }
+
             if (!timerStarted) {
                 gameClock.restart();
                 timerStarted = true;
             }
 
-            sf::Time elapsed = gameClock.getElapsedTime();
-            drawGameScreen(window, font, puzzle, elapsed);
+            drawGameScreen(window, font, puzzle, finalElapsed);
 
             SOLVE.render(window);
             SOLVE.update(window);
 
+            BACK.render(window);
+            BACK.update(window);
         }
-
-
-
         window.display();
     }
-
 
     return 1;
 }
