@@ -1,6 +1,6 @@
 /*
     Will create a sodoku, puzzle GUI using SFML.
-    Will add the ablity to solve the puzzle, added numbers generate
+    Will add the ablity to solve the puzzle, add numbers ,generate
     new puzzles. Plan is to use back tracking algo to solve the puzzles.
 
     File Name: Main.cpp
